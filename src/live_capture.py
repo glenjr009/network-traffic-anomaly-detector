@@ -1,5 +1,24 @@
+"""Opt-in live packet capture and CICIDS model inference.
 
-"""Opt-in live packet capture and CICIDS model inference."""
+This module connects three layers of the pipeline::
+
+    packets -> PacketRecord -> NetworkFlow.extract_features()
+            -> predict_flow() -> detection event -> WebSocket
+
+It is written against the interfaces provided by
+:mod:`src.flow_extractor` and :mod:`src.prediction`:
+
+* ``FlowExtractor.add_packet(PacketRecord)`` groups packets into flows.
+* ``NetworkFlow.extract_features()`` returns the canonical 78 CICIDS features.
+* ``predict_flow(flow)`` is the end-to-end inference entry point
+  (``predict_cicids(flow.extract_features())``).
+
+Payload handling delegates to :func:`src.pcap_reader.packet_to_record` so that
+live capture and saved-PCAP capture populate ``PacketRecord`` identically,
+including the application-layer ``payload_length`` required by the
+payload-driven features (``act_data_pkt_fwd``, ``min_seg_size_forward`` and the
+directional bulk features).
+"""
 
 import logging
 import threading
@@ -16,73 +35,27 @@ from scapy.all import (
 )
 
 from src.flow_extractor import FlowExtractor, PacketRecord
-from src.prediction import predict_cicids
+from src.pcap_reader import packet_to_record as _pcap_packet_to_record
+from src.prediction import predict_flow
 
 logger = logging.getLogger(__name__)
 
 
 def packet_to_record(packet) -> Optional[PacketRecord]:
-    """Convert an IPv4 TCP/UDP packet into the project's PacketRecord."""
-    if IP not in packet:
-        return None
+    """Convert an IPv4 TCP/UDP packet into the project's :class:`PacketRecord`.
 
-    ip = packet[IP]
-    tcp = packet[TCP] if TCP in packet else None
-    udp = packet[UDP] if UDP in packet else None
+    Delegates to the saved-PCAP adapter in :mod:`src.pcap_reader`. That adapter
+    is the single source of truth for how captured packets map to
+    ``PacketRecord`` fields, so live and offline captures stay consistent:
 
-    if tcp is None and udp is None:
-        return None
+    * ``length`` is the full captured frame length.
+    * ``payload_length`` is the application-layer (TCP/UDP payload) byte count,
+      and is ``0`` for header-only packets such as pure ACK/SYN segments.
 
-    flags = int(tcp.flags) if tcp is not None else 0
+    Returns ``None`` for non-IPv4 and non-TCP/UDP packets.
+    """
 
-    return PacketRecord(
-        timestamp=float(packet.time),
-        src_ip=str(ip.src),
-        dst_ip=str(ip.dst),
-        src_port=int(tcp.sport if tcp is not None else udp.sport),
-        dst_port=int(tcp.dport if tcp is not None else udp.dport),
-        protocol=int(ip.proto),
-        # Use IP-layer length, rather than Ethernet-frame length.
-        length=int(len(ip)),
-        ip_header_length=int(ip.ihl * 4),
-        tcp_header_length=int(tcp.dataofs * 4) if tcp is not None else 0,
-        fin=bool(flags & 0x01),
-        syn=bool(flags & 0x02),
-        rst=bool(flags & 0x04),
-        psh=bool(flags & 0x08),
-        ack=bool(flags & 0x10),
-        urg=bool(flags & 0x20),
-        ece=bool(flags & 0x40),
-        cwe=bool(flags & 0x80),
-        tcp_window_size=int(tcp.window) if tcp is not None else 0,
-    )
-
-
-def flow_to_features(flow) -> dict:
-    """Assemble the 78 CICIDS features using the existing extractor."""
-    parts = (
-        flow.basic_cicids_features(),
-        flow.rate_iat_cicids_features(),
-        flow.forward_backward_iat_features(),
-        flow.tcp_flag_and_rate_features(),
-        flow.packet_length_and_tcp_flag_features(),
-        flow.chunk8_features(),
-        flow.chunk9_features(),
-        flow.chunk10_features(),
-        flow.chunk11_features(),
-    )
-
-    features = {}
-    for part in parts:
-        overlap = features.keys() & part.keys()
-        if overlap:
-            raise ValueError(f"Duplicate CICIDS features: {sorted(overlap)}")
-        features.update(part)
-
-    if len(features) != 78:
-        raise ValueError(f"Expected 78 features, got {len(features)}")
-
-    return features
+    return _pcap_packet_to_record(packet, IP, TCP, UDP)
 
 
 class LiveCapture:
@@ -170,8 +143,9 @@ class LiveCapture:
             return
 
         try:
-            features = flow_to_features(flow)
-            result = predict_cicids(features)
+            # Canonical end-to-end inference:
+            # flow -> extract_features() -> model -> BENIGN/ATTACK.
+            result = predict_flow(flow)
 
             is_attack = result["prediction"] == "ATTACK"
 
