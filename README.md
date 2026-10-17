@@ -327,15 +327,28 @@ The project is intended to support both saved packet-capture analysis and, after
 
 ### Saved PCAP / PCAPNG analysis
 
-The development branch for live ML inference includes a saved-capture reader and validation tooling. These components are not available in `main` until their pull request is merged.
+The saved-capture reader in `src/pcap_reader.py` uses Scapy. Scapy is optional for the core extractor/inference modules, but required for reading `.pcap`/`.pcapng` files, running `scripts/validate_pcap.py`, and executing PCAP-reader tests. Install it from the repository root:
 
-After checking out the branch containing those files and installing its required dependencies, inspect the available command-line options:
+```bash
+python -m pip install -r requirements-pcap.txt
+```
+
+Inspect the available command-line options:
 
 ```bash
 python scripts/validate_pcap.py --help
 ```
 
+Run the end-to-end saved-capture validation (the capture remains local and must not be committed):
+
+```bash
+python scripts/validate_pcap.py --pcap path/to/saved-wlan-capture.pcapng --json reports/wlan_validation.json
+python -m unittest discover -s tests -v
+```
+
 Follow the options and input requirements reported by that script to validate a capture.
+
+The current adapter handles saved PCAP/PCAPNG files only. **Continuous live-interface capture is pending integration** and is not claimed as implemented.
 
 Use only captures you own or are authorised to analyse. A successful saved-capture run demonstrates that the tested file can pass through the supported processing pipeline; it does not demonstrate continuous live capture or reliable attack detection in production.
 

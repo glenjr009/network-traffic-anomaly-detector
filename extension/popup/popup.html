@@ -1,112 +1,127 @@
+
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-    <title>Network Anomaly Detector</title>
-
-    <link rel="stylesheet" href="popup.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#090e19">
+  <title>Network Anomaly Detector</title>
+  <link rel="stylesheet" href="popup.css">
 </head>
 
 <body>
+  <main class="app-shell">
+    <header class="topbar">
+      <div class="brand-mark" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none">
+          <path d="M12 2.8 20 6v5.5c0 5-3.4 8.3-8 10.2-4.6-1.9-8-5.2-8-10.2V6l8-3.2Z"
+                stroke="currentColor" stroke-width="1.6"/>
+          <path d="m8.5 12 2.2 2.2 4.8-5"
+                stroke="currentColor" stroke-width="1.8"
+                stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
 
-    <div class="container">
+      <div class="brand-copy">
+        <h1>Network Sentinel</h1>
+        <p>NETWORK THREAT MONITOR</p>
+      </div>
 
-        <header class="header">
-            <div class="logo">🛡️</div>
+      <span class="version-tag">ML</span>
+    </header>
 
-            <div>
-                <h1>Network Anomaly Detector</h1>
-                <p>AI-Powered Network Security</p>
-            </div>
-        </header>
+    <section class="hero-card" id="heroCard" aria-live="polite">
+      <div class="hero-topline">
+        <span class="eyebrow">LATEST CLASSIFICATION</span>
+        <span class="status-pill" id="statusPill">
+          <span class="status-dot"></span>
+          <span id="statusPillText">WAITING</span>
+        </span>
+      </div>
 
+      <div class="hero-main">
+        <div class="hero-symbol" id="statusIcon" aria-hidden="true">—</div>
+        <div class="hero-copy">
+          <h2 id="statusText">Waiting for detection</h2>
+          <p id="statusDescription">
+            Start the local detector to receive model predictions.
+          </p>
+        </div>
+      </div>
 
-        <section class="status-card">
+      <div class="hero-footer">
+        <span class="muted-label">Last result</span>
+        <span id="lastSeen">No results received</span>
+      </div>
+    </section>
 
-            <div class="status-icon" id="statusIcon">
-                ✓
-            </div>
+    <section class="confidence-card">
+      <div class="card-heading">
+        <div>
+          <p class="eyebrow">MODEL OUTPUT</p>
+          <h3>Model confidence</h3>
+        </div>
+        <span class="confidence-value" id="confidenceValue">—</span>
+      </div>
 
-            <div>
-                <h2 id="statusText">SYSTEM NORMAL</h2>
+      <div class="meter-track"
+           id="confidenceMeter"
+           role="progressbar"
+           aria-label="Model confidence"
+           aria-valuemin="0"
+           aria-valuemax="100"
+           aria-valuenow="0">
+        <div class="meter-fill" id="scoreProgress"></div>
+      </div>
 
-                <p id="statusDescription">
-                    No anomaly detected
-                </p>
-            </div>
+      <p class="helper-text" id="confidenceHint">
+        Confidence is shown when a model result is available.
+      </p>
+    </section>
 
-        </section>
+    <section class="details-card">
+      <div class="section-heading">
+        <h3>Detection details</h3>
+        <span class="section-icon" aria-hidden="true">↗</span>
+      </div>
 
+      <div class="detail-row">
+        <span class="detail-label">Classification</span>
+        <span class="detail-value" id="detectionStatus">—</span>
+      </div>
 
-        <section class="score-card">
+      <div class="detail-row">
+        <span class="detail-label">Severity</span>
+        <span class="detail-value" id="severity">—</span>
+      </div>
 
-            <div class="section-title">
-                <span>Anomaly Score</span>
-            </div>
+      <div class="detail-row">
+        <span class="detail-label">Attack label</span>
+        <span class="detail-value" id="attackType">—</span>
+      </div>
 
-            <div class="score" id="anomalyScore">
-                0%
-            </div>
+      <div class="detail-row">
+        <span class="detail-label">Model</span>
+        <span class="detail-value model-name" id="modelName">—</span>
+      </div>
+    </section>
 
-            <div class="score-bar">
-                <div
-                    class="score-progress"
-                    id="scoreProgress">
-                </div>
-            </div>
+    <section class="site-card">
+      <div class="site-icon" aria-hidden="true">◎</div>
+      <div class="site-copy">
+        <p class="eyebrow">ACTIVE TAB</p>
+        <p id="currentSite" class="site-address">Reading current tab…</p>
+      </div>
+    </section>
 
-        </section>
+    <footer class="app-footer">
+      <span class="footer-indicator" aria-hidden="true"></span>
+      <span>Local network analysis</span>
+      <span class="footer-divider">·</span>
+      <span>Powered by CICIDS ML</span>
+    </footer>
+  </main>
 
-
-        <section class="info-card">
-
-            <h3>Current Website</h3>
-
-            <p id="currentSite">
-                Detecting...
-            </p>
-
-        </section>
-
-
-        <section class="info-card">
-
-            <h3>Detection</h3>
-
-            <div class="info-row">
-                <span>Status</span>
-                <span id="detectionStatus">Normal</span>
-            </div>
-
-            <div class="info-row">
-                <span>Severity</span>
-                <span id="severity">Low</span>
-            </div>
-
-            <div class="info-row">
-                <span>Attack Type</span>
-                <span id="attackType">None</span>
-            </div>
-
-        </section>
-
-
-        <div class="live-status">
-    ● LIVE DETECTION ACTIVE
-</div>
-
-
-        <footer>
-            Network Traffic Anomaly Detector
-        </footer>
-
-    </div>
-
-    <script src="popup.js"></script>
-
+  <script src="popup.js"></script>
 </body>
-
 </html>
