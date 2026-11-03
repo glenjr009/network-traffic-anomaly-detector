@@ -213,244 +213,37 @@ animate();
 """, height=0)
 
 # -------------------------------------------------
-# Load Model
+
 # -------------------------------------------------
+# Load CICIDS Model
+# -------------------------------------------------
+
+from src.prediction import load_cicids_artifacts, CICIDS_FEATURE_NAMES
 
 @st.cache_resource
 def load_resources():
-    model = joblib.load("models/cicids_anomaly_model.pkl")
-    label_encoder = joblib.load("models/cicids_label_encoder.pkl")
+    model, label_encoder = load_cicids_artifacts()
+
+    # Validate the model's 78-feature schema
+    model_features = list(getattr(model, "feature_names_in_", []))
+
+    if model_features != list(CICIDS_FEATURE_NAMES):
+        raise ValueError("Model feature schema does not match CICIDS schema.")
+
+    # Validate model output labels
+    encoder_classes = set(map(str, label_encoder.classes_))
+
+    if encoder_classes != {"ATTACK", "BENIGN"}:
+        raise ValueError("Unexpected model label classes.")
+
     return model, label_encoder
+
 
 try:
     model, label_encoder = load_resources()
-except Exception as e:
-    st.error("Model files missing inside `models/` directory.")
-
-# -------------------------------------------------
-# Sidebar
-# -------------------------------------------------
-
-with st.sidebar:
-    st.image("models/logo.png", width=170)
-    st.title("🛡️ SOC 3D CORE")
-
-    st.markdown("""
-        <div style="background: rgba(0, 230, 118, 0.1); border: 1px solid #00E676; padding: 10px; border-radius: 12px; text-align: center; box-shadow: 0 0 15px rgba(0, 230, 118, 0.2);">
-            <span style="color: #00E676; font-weight: 700; letter-spacing: 1px;">🟢 3D TELEMETRY ACTIVE</span>
-        </div>
-    """, unsafe_allow_html=True)
-
-    st.markdown("---")
-    st.markdown("### 🔹 Modules")
-    st.markdown("📂 **Data Ingestion**")
-    st.markdown("⚡ **Real-time Inference**")
-    st.markdown("📊 **3D Spatial Analytics**")
-    st.markdown("📥 **Cyber Threat Report**")
-
-    st.markdown("---")
-    st.caption("Architecture: ML-IDS Pipeline v3.0")
-
-# -------------------------------------------------
-# Main Hero Section
-# -------------------------------------------------
-
-st.markdown("""
-<div class="hero-3d-card">
-    <h1 style="color: #00E5FF; margin:0; font-size: 2.3rem; text-shadow: 0 0 15px rgba(0,229,255,0.4);">
-        🛡️ NETWORK TRAFFIC ANOMALY DETECTOR
-    </h1>
-    <p style="color: #8A99AD; margin-top: 8px; font-size: 1.1rem; font-weight: 500;">
-        Next-Gen Spatial Intelligence & AI-Powered Intrusion Detection System
-    </p>
-</div>
-""", unsafe_allow_html=True)
-
-# -------------------------------------------------
-# Dataset Uploader
-# -------------------------------------------------
-
-uploaded_file = st.file_uploader(
-    "Choose a PCAP / CSV Network File",
-    type=["csv"],
-    help="Upload preprocessed network flow CSV data."
-)
-
-# -------------------------------------------------
-# Processing & Predictions
-# -------------------------------------------------
-
-if uploaded_file is not None:
-
-    df = pd.read_csv(uploaded_file, low_memory=False)
-
-    # Cleaning
-    df.columns = df.columns.str.strip()
-    df.replace([np.inf, -np.inf], np.nan, inplace=True)
-    df.dropna(inplace=True)
-
-    if "Label" in df.columns:
-        df = df.drop(columns=["Label"])
-
-    # Feature Alignment
-    expected_features = list(model.feature_names_in_)
-    extra_cols = [c for c in df.columns if c not in expected_features]
-    if extra_cols:
-        df.drop(columns=extra_cols, inplace=True)
-
-    missing_cols = [c for c in expected_features if c not in df.columns]
-    for col in missing_cols:
-        df[col] = 0
-
-    df = df[expected_features]
-
-    try:
-        with st.spinner("⚡ Running Deep AI Inspection..."):
-            predictions = model.predict(df)
-
-        labels = label_encoder.inverse_transform(predictions)
-        result = df.copy()
-        result["Prediction"] = labels
-
-        # Metrics
-        benign = int((result["Prediction"] == "BENIGN").sum())
-        attack = int(len(result) - benign)
-        total = int(len(result))
-        security_score = round((benign / total) * 100, 2)
-
-        st.markdown("<br>", unsafe_allow_html=True)
-
-        # -------------------------------------------------
-        # Threat Level Badge
-        # -------------------------------------------------
-
-        if security_score >= 95:
-            status_box = '<div style="background: rgba(0, 230, 118, 0.15); border: 1px solid #00E676; color: #00E676; padding: 12px 20px; border-radius: 12px; display: inline-block; font-weight: bold; box-shadow: 0 0 15px rgba(0, 230, 118, 0.3);">🟢 THREAT LEVEL: LOW (SYSTEM SAFE)</div>'
-        elif security_score >= 80:
-            status_box = '<div style="background: rgba(255, 171, 0, 0.15); border: 1px solid #FFAB00; color: #FFAB00; padding: 12px 20px; border-radius: 12px; display: inline-block; font-weight: bold; box-shadow: 0 0 15px rgba(255, 171, 0, 0.3);">🟠 THREAT LEVEL: MEDIUM (ELEVATED RISK)</div>'
-        else:
-            status_box = '<div style="background: rgba(255, 23, 68, 0.15); border: 1px solid #FF1744; color: #FF1744; padding: 12px 20px; border-radius: 12px; display: inline-block; font-weight: bold; box-shadow: 0 0 15px rgba(255, 23, 68, 0.3);">🔴 THREAT LEVEL: CRITICAL (ATTACK DETECTED)</div>'
-
-        st.markdown(status_box, unsafe_allow_html=True)
-        st.markdown("<br>", unsafe_allow_html=True)
-
-        # -------------------------------------------------
-        # 3D Metric Cards
-        # -------------------------------------------------
-
-        c1, c2, c3, c4 = st.columns(4)
-
-        with c1:
-            st.markdown(f"""
-                <div class="card-3d">
-                    <div class="card-label">Total Traffic Packets</div>
-                    <div class="card-value" style="color: #00E5FF;">{total:,}</div>
-                </div>
-            """, unsafe_allow_html=True)
-
-        with c2:
-            st.markdown(f"""
-                <div class="card-3d">
-                    <div class="card-label">Safe Benign Flow</div>
-                    <div class="card-value" style="color: #00E676;">{benign:,}</div>
-                </div>
-            """, unsafe_allow_html=True)
-
-        with c3:
-            st.markdown(f"""
-                <div class="card-3d">
-                    <div class="card-label">Threat Anomalies</div>
-                    <div class="card-value" style="color: #FF1744;">{attack:,}</div>
-                </div>
-            """, unsafe_allow_html=True)
-
-        with c4:
-            st.markdown(f"""
-                <div class="card-3d">
-                    <div class="card-label">Overall Security Score</div>
-                    <div class="card-value" style="color: #FFD600;">{security_score}%</div>
-                </div>
-            """, unsafe_allow_html=True)
-
-        st.markdown("<br>", unsafe_allow_html=True)
-
-        # -------------------------------------------------
-        # 3D Charts & Tab Analytics
-        # -------------------------------------------------
-
-        tab1, tab2 = st.tabs(["📊 3D Visual Analytics", "📋 Telemetry Inspection Data"])
-
-        with tab1:
-            left, right = st.columns(2)
-
-            with left:
-                # 3D Styled Donut Chart
-                pie = go.Figure(data=[go.Pie(
-                    labels=["BENIGN", "ATTACK"],
-                    values=[benign, attack],
-                    hole=0.6,
-                    marker=dict(colors=["#00E676", "#FF1744"], line=dict(color="#080B12", width=3)),
-                    textinfo="percent+label",
-                    hoverinfo="label+value+percent"
-                )])
-
-                pie.update_layout(
-                    title="Traffic Ratio Breakdown",
-                    paper_bgcolor="rgba(0,0,0,0)",
-                    plot_bgcolor="rgba(0,0,0,0)",
-                    font=dict(color="#E0E6ED", family="Rajdhani", size=14),
-                    showlegend=True,
-                    margin=dict(t=40, b=20, l=20, r=20)
-                )
-                st.plotly_chart(pie, use_container_width=True)
-
-            with right:
-                # 3D Depth Styled Bar Chart
-                bar = go.Figure(data=[go.Bar(
-                    x=["BENIGN", "ATTACK"],
-                    y=[benign, attack],
-                    marker=dict(
-                        color=["#00E676", "#FF1744"],
-                        line=dict(color="#000", width=1.5)
-                    ),
-                    text=[f"{benign:,}", f"{attack:,}"],
-                    textposition="auto"
-                )])
-
-                bar.update_layout(
-                    title="Volume Distribution",
-                    paper_bgcolor="rgba(0,0,0,0)",
-                    plot_bgcolor="rgba(0,0,0,0)",
-                    font=dict(color="#E0E6ED", family="Rajdhani", size=14),
-                    xaxis=dict(showgrid=False),
-                    yaxis=dict(showgrid=True, gridcolor="rgba(255,255,255,0.05)"),
-                    margin=dict(t=40, b=20, l=20, r=20)
-                )
-                st.plotly_chart(bar, use_container_width=True)
-
-        with tab2:
-            st.markdown("### 📄 Processed Feature Array")
-            st.dataframe(result, use_container_width=True, height=350)
-
-            st.download_button(
-                label="📥 Export 3D Telemetry Report (CSV)",
-                data=result.to_csv(index=False),
-                file_name="3d_threat_predictions.csv",
-                mime="text/csv"
-            )
-
-    except Exception as e:
-        st.error("Prediction analysis encountered an error.")
-        st.code(str(e))
-
-# -------------------------------------------------
-# Footer
-# -------------------------------------------------
-
-st.markdown("---")
-st.markdown(
-    "<div style='text-align: center; color: #5A6978; font-family: Orbitron; font-size: 0.8rem; letter-spacing: 1px;'>"
-    "🛡️ SOC 3D DETECTOR | ENGINEERED BY STAVAN MOHIRE"
-    "</div>",
-    unsafe_allow_html=True
-)
+except Exception:
+    st.error(
+        "The CICIDS model could not be loaded or validated. "
+        "Please check that the model and label encoder files are available."
+    )
+    st.stop()
