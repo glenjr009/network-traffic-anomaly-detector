@@ -1,7 +1,7 @@
-
 document.addEventListener("DOMContentLoaded", () => {
   const $ = (id) => document.getElementById(id);
 
+  // Monitor elements
   const heroCard = $("heroCard");
   const statusIcon = $("statusIcon");
   const statusText = $("statusText");
@@ -19,11 +19,70 @@ document.addEventListener("DOMContentLoaded", () => {
   const attackType = $("attackType");
   const modelName = $("modelName");
   const currentSite = $("currentSite");
+  const explainAlertBtn = $("explainAlertBtn");
 
+  // Tab elements
+  const tabMonitorBtn = $("tabMonitorBtn");
+  const tabChatBtn = $("tabChatBtn");
+  const monitorView = $("monitorView");
+  const chatView = $("chatView");
+
+  // Chat elements
+  const chatMessages = $("chatMessages");
+  const chatForm = $("chatForm");
+  const chatInput = $("chatInput");
+  const chatSendBtn = $("chatSendBtn");
+  const ragStatusBadge = $("ragStatusBadge");
+
+  const API_BASE = "http://127.0.0.1:8000";
   const STALE_AFTER_MS = 60_000;
 
   let latestResult = null;
   let freshnessTimer = null;
+
+  // ============================================================
+  // TAB NAVIGATION
+  // ============================================================
+
+  function switchTab(target) {
+    if (target === "chat") {
+      tabChatBtn.classList.add("active");
+      tabMonitorBtn.classList.remove("active");
+      chatView.classList.add("active");
+      monitorView.classList.remove("active");
+      chatInput.focus();
+    } else {
+      tabMonitorBtn.classList.add("active");
+      tabChatBtn.classList.remove("active");
+      monitorView.classList.add("active");
+      chatView.classList.remove("active");
+    }
+  }
+
+  tabMonitorBtn.addEventListener("click", () => switchTab("monitor"));
+  tabChatBtn.addEventListener("click", () => switchTab("chat"));
+
+  // Quick chip queries
+  document.querySelectorAll(".chip-btn").forEach((chip) => {
+    chip.addEventListener("click", () => {
+      const query = chip.getAttribute("data-query");
+      if (query) {
+        chatInput.value = query;
+        sendMessage(query);
+      }
+    });
+  });
+
+  // Explain Alert Button
+  explainAlertBtn.addEventListener("click", () => {
+    if (!latestResult) return;
+    switchTab("chat");
+    explainDetection(latestResult);
+  });
+
+  // ============================================================
+  // TIME & SITE FORMATTING
+  // ============================================================
 
   function formatAge(timestamp) {
     const time = Date.parse(timestamp);
@@ -61,7 +120,6 @@ document.addEventListener("DOMContentLoaded", () => {
     try {
       const parsed = new URL(url);
 
-      // Browser internal pages are not ordinary websites.
       if (["chrome:", "edge:", "about:"].includes(parsed.protocol)) {
         return "Browser internal page";
       }
@@ -105,6 +163,8 @@ document.addEventListener("DOMContentLoaded", () => {
     severity.textContent = "—";
     attackType.textContent = "—";
     modelName.textContent = "—";
+
+    explainAlertBtn.style.display = "none";
   }
 
   function displayDetection(result) {
@@ -160,10 +220,16 @@ document.addEventListener("DOMContentLoaded", () => {
 
     detectionStatus.textContent = isAttack ? "Attack" : "Benign";
 
-    // Only display fields actually provided by the backend.
     severity.textContent = result.severity || "Not provided";
     attackType.textContent = result.attack_type || "Not provided";
     modelName.textContent = result.model || "Not provided";
+
+    // Show explain button if anomaly detected
+    if (isAttack) {
+      explainAlertBtn.style.display = "block";
+    } else {
+      explainAlertBtn.style.display = "none";
+    }
 
     updateFreshness();
   }
@@ -198,16 +264,147 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
+  // ============================================================
+  // CHATBOT INTERACTION
+  // ============================================================
+
+  function appendMessage(sender, text, meta = "") {
+    const bubble = document.createElement("div");
+    bubble.className = `chat-bubble bubble-${sender}`;
+
+    const formattedText = text
+      .replace(/\n\n/g, "</p><p>")
+      .replace(/\n/g, "<br>");
+    bubble.innerHTML = `<p>${formattedText}</p>`;
+
+    if (meta) {
+      const metaDiv = document.createElement("div");
+      metaDiv.className = "chat-meta";
+      metaDiv.innerHTML = meta;
+      bubble.appendChild(metaDiv);
+    }
+
+    chatMessages.appendChild(bubble);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+    return bubble;
+  }
+
+  async function checkRAGStatus() {
+    try {
+      const res = await fetch(`${API_BASE}/api/rag/status`);
+      if (res.ok) {
+        const data = await res.json();
+        ragStatusBadge.textContent = `${data.chunks_indexed} Chunks · ${data.llm_provider.toUpperCase()}`;
+        ragStatusBadge.style.color = "var(--green)";
+      }
+    } catch {
+      ragStatusBadge.textContent = "Offline Mode";
+      ragStatusBadge.style.color = "var(--amber)";
+    }
+  }
+
+  async function sendMessage(query) {
+    if (!query || !query.trim()) return;
+
+    appendMessage("user", query);
+    chatInput.value = "";
+    chatSendBtn.disabled = true;
+
+    const loadingBubble = appendMessage("assistant", "Analyzing threat knowledge base…");
+
+    try {
+      const res = await fetch(`${API_BASE}/api/chat`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ query: query.trim() }),
+      });
+
+      if (!res.ok) {
+        throw new Error(`Server returned HTTP ${res.status}`);
+      }
+
+      const data = await res.json();
+      loadingBubble.remove();
+
+      let meta = `Mode: ${data.mode} · Latency: ${data.latency_ms}ms`;
+      if (data.sources && data.sources.length > 0) {
+        const docNames = [...new Set(data.sources.map((s) => s.document_name).filter(Boolean))];
+        if (docNames.length > 0) {
+          meta += `<br>Sources: ${docNames.join(", ")}`;
+        }
+      }
+
+      appendMessage("assistant", data.answer, meta);
+    } catch (err) {
+      loadingBubble.remove();
+      appendMessage(
+        "assistant",
+        `Could not reach NetGuard AI backend (${err.message}). Ensure realtime_api is running at ${API_BASE}.`
+      );
+    } finally {
+      chatSendBtn.disabled = false;
+    }
+  }
+
+  async function explainDetection(detection) {
+    appendMessage(
+      "user",
+      `⚡ Explain Detection: ${detection.prediction} (${detection.attack_type || "Attack"}) with severity ${detection.severity || "HIGH"}`
+    );
+    const loadingBubble = appendMessage("assistant", "Cross-referencing telemetry with SOC playbooks…");
+
+    try {
+      const res = await fetch(`${API_BASE}/api/chat/explain`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          detection: detection,
+          question: "Explain this detected network anomaly, its potential impact, and SOC mitigation actions.",
+        }),
+      });
+
+      if (!res.ok) {
+        throw new Error(`Server returned HTTP ${res.status}`);
+      }
+
+      const data = await res.json();
+      loadingBubble.remove();
+
+      let meta = `Mode: ${data.mode} · Latency: ${data.latency_ms}ms`;
+      if (data.sources && data.sources.length > 0) {
+        const docNames = [...new Set(data.sources.map((s) => s.document_name).filter(Boolean))];
+        if (docNames.length > 0) {
+          meta += `<br>Sources: ${docNames.join(", ")}`;
+        }
+      }
+
+      appendMessage("assistant", data.answer, meta);
+    } catch (err) {
+      loadingBubble.remove();
+      appendMessage("assistant", `Could not generate explanation: ${err.message}`);
+    }
+  }
+
+  chatForm.addEventListener("submit", (e) => {
+    e.preventDefault();
+    sendMessage(chatInput.value);
+  });
+
+  // ============================================================
+  // STORAGE & TAB INITIALIZATION
+  // ============================================================
+
   function loadStoredDetection() {
+    if (typeof chrome === "undefined" || !chrome.storage) {
+      return;
+    }
     chrome.storage.local.get(["latestDetection"], (data) => {
-      if (chrome.runtime.lastError) {
+      if (chrome.runtime?.lastError) {
         console.error(
           "Could not read stored detection:",
           chrome.runtime.lastError.message
         );
         resetDisplay();
-        statusDescription.textContent =
-          "Could not read the latest stored result.";
         return;
       }
 
@@ -220,10 +417,14 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function loadCurrentTab() {
+    if (typeof chrome === "undefined" || !chrome.tabs) {
+      currentSite.textContent = "127.0.0.1:8000 (Local)";
+      return;
+    }
     chrome.tabs.query(
       { active: true, currentWindow: true },
       (tabs) => {
-        if (chrome.runtime.lastError) {
+        if (chrome.runtime?.lastError) {
           currentSite.textContent = "Tab information unavailable";
           return;
         }
@@ -233,17 +434,17 @@ document.addEventListener("DOMContentLoaded", () => {
     );
   }
 
-  chrome.storage.onChanged.addListener((changes, areaName) => {
-    if (
-      areaName === "local" &&
-      changes.latestDetection
-    ) {
-      displayDetection(changes.latestDetection.newValue);
-    }
-  });
+  if (typeof chrome !== "undefined" && chrome.storage?.onChanged) {
+    chrome.storage.onChanged.addListener((changes, areaName) => {
+      if (areaName === "local" && changes.latestDetection) {
+        displayDetection(changes.latestDetection.newValue);
+      }
+    });
+  }
 
   loadCurrentTab();
   loadStoredDetection();
+  checkRAGStatus();
 
   freshnessTimer = window.setInterval(updateFreshness, 5_000);
 

@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -24,101 +23,144 @@
 
       <div class="brand-copy">
         <h1>Network Sentinel</h1>
-        <p>NETWORK THREAT MONITOR</p>
+        <p>NETWORK THREAT MONITOR & AI</p>
       </div>
 
-      <span class="version-tag">ML</span>
+      <span class="version-tag">RAG AI</span>
     </header>
 
-    <section class="hero-card" id="heroCard" aria-live="polite">
-      <div class="hero-topline">
-        <span class="eyebrow">LATEST CLASSIFICATION</span>
-        <span class="status-pill" id="statusPill">
-          <span class="status-dot"></span>
-          <span id="statusPillText">WAITING</span>
-        </span>
-      </div>
+    <!-- Navigation Tabs -->
+    <nav class="tab-nav">
+      <button class="tab-btn active" id="tabMonitorBtn">Threat Monitor</button>
+      <button class="tab-btn" id="tabChatBtn">AI SOC Chatbot</button>
+    </nav>
 
-      <div class="hero-main">
-        <div class="hero-symbol" id="statusIcon" aria-hidden="true">—</div>
-        <div class="hero-copy">
-          <h2 id="statusText">Waiting for detection</h2>
-          <p id="statusDescription">
-            Start the local detector to receive model predictions.
-          </p>
+    <!-- TAB 1: THREAT MONITOR -->
+    <div id="monitorView" class="tab-view active">
+      <section class="hero-card" id="heroCard" aria-live="polite">
+        <div class="hero-topline">
+          <span class="eyebrow">LATEST CLASSIFICATION</span>
+          <span class="status-pill" id="statusPill">
+            <span class="status-dot"></span>
+            <span id="statusPillText">WAITING</span>
+          </span>
         </div>
-      </div>
 
-      <div class="hero-footer">
-        <span class="muted-label">Last result</span>
-        <span id="lastSeen">No results received</span>
-      </div>
-    </section>
-
-    <section class="confidence-card">
-      <div class="card-heading">
-        <div>
-          <p class="eyebrow">MODEL OUTPUT</p>
-          <h3>Model confidence</h3>
+        <div class="hero-main">
+          <div class="hero-symbol" id="statusIcon" aria-hidden="true">—</div>
+          <div class="hero-copy">
+            <h2 id="statusText">Waiting for detection</h2>
+            <p id="statusDescription">
+              Start the local detector to receive model predictions.
+            </p>
+          </div>
         </div>
-        <span class="confidence-value" id="confidenceValue">—</span>
-      </div>
 
-      <div class="meter-track"
-           id="confidenceMeter"
-           role="progressbar"
-           aria-label="Model confidence"
-           aria-valuemin="0"
-           aria-valuemax="100"
-           aria-valuenow="0">
-        <div class="meter-fill" id="scoreProgress"></div>
-      </div>
+        <div class="hero-footer">
+          <span class="muted-label">Last result</span>
+          <span id="lastSeen">No results received</span>
+        </div>
 
-      <p class="helper-text" id="confidenceHint">
-        Confidence is shown when a model result is available.
-      </p>
-    </section>
+        <button id="explainAlertBtn" class="action-btn" style="display: none;">
+          ⚡ Explain Anomaly with AI
+        </button>
+      </section>
 
-    <section class="details-card">
-      <div class="section-heading">
-        <h3>Detection details</h3>
-        <span class="section-icon" aria-hidden="true">↗</span>
-      </div>
+      <section class="confidence-card">
+        <div class="card-heading">
+          <div>
+            <p class="eyebrow">MODEL OUTPUT</p>
+            <h3>Model confidence</h3>
+          </div>
+          <span class="confidence-value" id="confidenceValue">—</span>
+        </div>
 
-      <div class="detail-row">
-        <span class="detail-label">Classification</span>
-        <span class="detail-value" id="detectionStatus">—</span>
-      </div>
+        <div class="meter-track"
+             id="confidenceMeter"
+             role="progressbar"
+             aria-label="Model confidence"
+             aria-valuemin="0"
+             aria-valuemax="100"
+             aria-valuenow="0">
+          <div class="meter-fill" id="scoreProgress"></div>
+        </div>
 
-      <div class="detail-row">
-        <span class="detail-label">Severity</span>
-        <span class="detail-value" id="severity">—</span>
-      </div>
+        <p class="helper-text" id="confidenceHint">
+          Confidence is shown when a model result is available.
+        </p>
+      </section>
 
-      <div class="detail-row">
-        <span class="detail-label">Attack label</span>
-        <span class="detail-value" id="attackType">—</span>
-      </div>
+      <section class="details-card">
+        <div class="section-heading">
+          <h3>Detection details</h3>
+          <span class="section-icon" aria-hidden="true">↗</span>
+        </div>
 
-      <div class="detail-row">
-        <span class="detail-label">Model</span>
-        <span class="detail-value model-name" id="modelName">—</span>
-      </div>
-    </section>
+        <div class="detail-row">
+          <span class="detail-label">Classification</span>
+          <span class="detail-value" id="detectionStatus">—</span>
+        </div>
 
-    <section class="site-card">
-      <div class="site-icon" aria-hidden="true">◎</div>
-      <div class="site-copy">
-        <p class="eyebrow">ACTIVE TAB</p>
-        <p id="currentSite" class="site-address">Reading current tab…</p>
-      </div>
-    </section>
+        <div class="detail-row">
+          <span class="detail-label">Severity</span>
+          <span class="detail-value" id="severity">—</span>
+        </div>
+
+        <div class="detail-row">
+          <span class="detail-label">Attack label</span>
+          <span class="detail-value" id="attackType">—</span>
+        </div>
+
+        <div class="detail-row">
+          <span class="detail-label">Model</span>
+          <span class="detail-value model-name" id="modelName">—</span>
+        </div>
+      </section>
+
+      <section class="site-card">
+        <div class="site-icon" aria-hidden="true">◎</div>
+        <div class="site-copy">
+          <p class="eyebrow">ACTIVE TAB</p>
+          <p id="currentSite" class="site-address">Reading current tab…</p>
+        </div>
+      </section>
+    </div>
+
+    <!-- TAB 2: AI SOC CHATBOT -->
+    <div id="chatView" class="tab-view">
+      <section class="chat-card">
+        <div class="chat-header">
+          <div>
+            <p class="eyebrow">GROUNDED INTELLIGENCE</p>
+            <h3>NetGuard AI Assistant</h3>
+          </div>
+          <span class="rag-status-badge" id="ragStatusBadge">RAG Ready</span>
+        </div>
+
+        <div class="chat-chips">
+          <button class="chip-btn" data-query="What is SYN flood DoS?">SYN Flood?</button>
+          <button class="chip-btn" data-query="How to mitigate brute force attacks?">Mitigate Brute Force</button>
+          <button class="chip-btn" data-query="What is the CICIDS2017 dataset?">CICIDS2017 Info</button>
+        </div>
+
+        <div class="chat-messages" id="chatMessages">
+          <div class="chat-bubble bubble-assistant">
+            <p><strong>NetGuard AI:</strong> Ask me about network threats, attack signatures, CICIDS/NSL-KDD datasets, or how to mitigate detected anomalies.</p>
+          </div>
+        </div>
+
+        <form class="chat-input-bar" id="chatForm">
+          <input type="text" id="chatInput" placeholder="Ask about threats or mitigations…" autocomplete="off" />
+          <button type="submit" id="chatSendBtn">Send</button>
+        </form>
+      </section>
+    </div>
 
     <footer class="app-footer">
       <span class="footer-indicator" aria-hidden="true"></span>
       <span>Local network analysis</span>
       <span class="footer-divider">·</span>
-      <span>Powered by CICIDS ML</span>
+      <span>Powered by CICIDS & NetGuard RAG</span>
     </footer>
   </main>
 

@@ -1,4 +1,3 @@
-
 :root {
   color-scheme: dark;
   font-family: Inter, "Segoe UI", system-ui, -apple-system, sans-serif;
@@ -24,8 +23,8 @@
 }
 
 body {
-  width: 380px;
-  min-height: 500px;
+  width: 390px;
+  min-height: 520px;
   margin: 0;
   background:
     radial-gradient(ellipse at 50% -20%, #1c3152 0%, transparent 56%),
@@ -36,31 +35,31 @@ body {
 }
 
 .app-shell {
-  padding: 20px;
+  padding: 18px;
 }
 
 .topbar {
   display: flex;
   align-items: center;
   gap: 12px;
-  margin-bottom: 22px;
+  margin-bottom: 14px;
 }
 
 .brand-mark {
   display: grid;
-  width: 42px;
-  height: 42px;
-  flex: 0 0 42px;
+  width: 38px;
+  height: 38px;
+  flex: 0 0 38px;
   place-items: center;
   color: var(--blue);
   background: linear-gradient(145deg, #1c3456, #111d30);
   border: 1px solid #2c466b;
-  border-radius: 13px;
+  border-radius: 12px;
 }
 
 .brand-mark svg {
-  width: 25px;
-  height: 25px;
+  width: 22px;
+  height: 22px;
 }
 
 .brand-copy {
@@ -77,7 +76,7 @@ body {
 
 .brand-copy p,
 .eyebrow {
-  margin: 5px 0 0;
+  margin: 4px 0 0;
   color: var(--muted);
   font-size: 9px;
   font-weight: 750;
@@ -85,7 +84,7 @@ body {
 }
 
 .version-tag {
-  padding: 5px 7px;
+  padding: 4px 7px;
   color: var(--blue);
   background: #15253d;
   border: 1px solid #2a4264;
@@ -95,24 +94,69 @@ body {
   letter-spacing: 0.7px;
 }
 
+/* Tabs Navigation */
+.tab-nav {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 14px;
+  background: #0d1522;
+  padding: 3px;
+  border-radius: 10px;
+  border: 1px solid #1f2d42;
+}
+
+.tab-btn {
+  flex: 1;
+  background: transparent;
+  border: none;
+  color: var(--muted);
+  padding: 7px 10px;
+  font-size: 11px;
+  font-weight: 650;
+  border-radius: 7px;
+  cursor: pointer;
+  transition: all 0.18s ease;
+}
+
+.tab-btn:hover {
+  color: var(--text);
+}
+
+.tab-btn.active {
+  background: #192a43;
+  color: var(--blue);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+}
+
+.tab-view {
+  display: none;
+}
+
+.tab-view.active {
+  display: block;
+}
+
+/* Hero and details cards */
 .hero-card,
 .confidence-card,
 .details-card,
-.site-card {
+.site-card,
+.chat-card {
   background: linear-gradient(145deg, #121c2c, #0f1725);
   border: 1px solid var(--border);
-  border-radius: 15px;
+  border-radius: 14px;
 }
 
 .hero-card {
-  padding: 16px;
+  padding: 15px;
   margin-bottom: 12px;
 }
 
 .hero-topline,
 .card-heading,
 .section-heading,
-.hero-footer {
+.hero-footer,
+.chat-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -123,7 +167,7 @@ body {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 6px 8px;
+  padding: 5px 8px;
   color: var(--muted);
   background: #1b2637;
   border: 1px solid #2c394d;
@@ -146,20 +190,20 @@ body {
   display: flex;
   align-items: center;
   gap: 13px;
-  margin: 22px 0 20px;
+  margin: 18px 0 16px;
 }
 
 .hero-symbol {
   display: grid;
-  width: 48px;
-  height: 48px;
-  flex: 0 0 48px;
+  width: 44px;
+  height: 44px;
+  flex: 0 0 44px;
   place-items: center;
   color: var(--blue);
   background: #192b45;
   border: 1px solid #2c466a;
-  border-radius: 15px;
-  font-size: 22px;
+  border-radius: 13px;
+  font-size: 20px;
   font-weight: 800;
 }
 
@@ -169,21 +213,21 @@ body {
 
 .hero-copy h2 {
   margin: 0;
-  font-size: 17px;
+  font-size: 16px;
   font-weight: 750;
   line-height: 1.35;
   letter-spacing: -0.4px;
 }
 
 .hero-copy p {
-  margin: 5px 0 0;
+  margin: 4px 0 0;
   color: var(--muted);
   font-size: 11px;
-  line-height: 1.5;
+  line-height: 1.45;
 }
 
 .hero-footer {
-  padding-top: 12px;
+  padding-top: 10px;
   border-top: 1px solid #253147;
   font-size: 10px;
 }
@@ -197,26 +241,47 @@ body {
   text-align: right;
 }
 
+.action-btn {
+  width: 100%;
+  margin-top: 12px;
+  padding: 8px 12px;
+  background: linear-gradient(135deg, #1c365a, #162640);
+  border: 1px solid #365582;
+  border-radius: 8px;
+  color: #cbe0ff;
+  font-weight: 650;
+  font-size: 11px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.action-btn:hover {
+  background: #254673;
+  color: #fff;
+  border-color: #5582c0;
+}
+
 .confidence-card,
 .details-card {
-  padding: 16px;
+  padding: 14px;
   margin-bottom: 12px;
 }
 
 .card-heading {
-  margin-bottom: 17px;
+  margin-bottom: 14px;
 }
 
 .card-heading h3,
-.section-heading h3 {
-  margin: 6px 0 0;
+.section-heading h3,
+.chat-header h3 {
+  margin: 4px 0 0;
   font-size: 13px;
   font-weight: 700;
 }
 
 .confidence-value {
   color: var(--blue);
-  font-size: 27px;
+  font-size: 25px;
   font-weight: 800;
   letter-spacing: -1px;
   font-variant-numeric: tabular-nums;
@@ -238,14 +303,14 @@ body {
 }
 
 .helper-text {
-  margin: 11px 0 0;
+  margin: 10px 0 0;
   color: var(--muted);
   font-size: 10px;
   line-height: 1.5;
 }
 
 .section-heading {
-  margin-bottom: 11px;
+  margin-bottom: 9px;
 }
 
 .section-heading h3 {
@@ -254,7 +319,7 @@ body {
 
 .section-icon {
   color: var(--muted);
-  font-size: 17px;
+  font-size: 15px;
 }
 
 .detail-row {
@@ -262,7 +327,7 @@ body {
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  min-height: 36px;
+  min-height: 32px;
   border-bottom: 1px solid #222e41;
 }
 
@@ -293,20 +358,20 @@ body {
   display: flex;
   align-items: center;
   gap: 11px;
-  padding: 13px;
+  padding: 12px;
 }
 
 .site-icon {
   display: grid;
-  width: 35px;
-  height: 35px;
-  flex: 0 0 35px;
+  width: 32px;
+  height: 32px;
+  flex: 0 0 32px;
   place-items: center;
   color: var(--blue);
   background: #192b45;
   border: 1px solid #2b4262;
-  border-radius: 10px;
-  font-size: 21px;
+  border-radius: 9px;
+  font-size: 18px;
 }
 
 .site-copy {
@@ -319,11 +384,144 @@ body {
 }
 
 .site-address {
-  margin: 6px 0 0;
+  margin: 5px 0 0;
   overflow-wrap: anywhere;
   color: #dce7f8;
   font-size: 11px;
   line-height: 1.4;
+}
+
+/* Chat view styles */
+.chat-card {
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  height: 420px;
+}
+
+.rag-status-badge {
+  font-size: 9px;
+  font-weight: 700;
+  color: var(--green);
+  background: var(--green-soft);
+  padding: 4px 8px;
+  border-radius: 99px;
+  border: 1px solid #205348;
+}
+
+.chat-chips {
+  display: flex;
+  gap: 6px;
+  margin: 10px 0;
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+
+.chip-btn {
+  background: #162438;
+  border: 1px solid #283e5f;
+  color: #b9d3ff;
+  padding: 4px 9px;
+  border-radius: 12px;
+  font-size: 10px;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.chip-btn:hover {
+  background: #203554;
+  color: #fff;
+}
+
+.chat-messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.chat-bubble {
+  padding: 10px 12px;
+  border-radius: 10px;
+  font-size: 11px;
+  line-height: 1.5;
+  word-break: break-word;
+}
+
+.chat-bubble p {
+  margin: 0 0 6px;
+}
+.chat-bubble p:last-child {
+  margin-bottom: 0;
+}
+
+.bubble-assistant {
+  background: #142033;
+  border: 1px solid #223755;
+  color: #dbe7f9;
+  align-self: flex-start;
+  max-width: 95%;
+}
+
+.bubble-user {
+  background: #1b3864;
+  border: 1px solid #33598d;
+  color: #fff;
+  align-self: flex-end;
+  max-width: 85%;
+}
+
+.chat-meta {
+  font-size: 9px;
+  color: var(--muted);
+  margin-top: 6px;
+  padding-top: 4px;
+  border-top: 1px solid #24354e;
+}
+
+.chat-input-bar {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.chat-input-bar input {
+  flex: 1;
+  background: #090e18;
+  border: 1px solid #24354f;
+  border-radius: 8px;
+  padding: 8px 10px;
+  color: #fff;
+  font-size: 11px;
+  outline: none;
+}
+
+.chat-input-bar input:focus {
+  border-color: var(--blue);
+}
+
+.chat-input-bar button {
+  background: var(--blue);
+  color: #090e19;
+  border: none;
+  border-radius: 8px;
+  padding: 0 14px;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: opacity 0.15s ease;
+}
+
+.chat-input-bar button:hover {
+  opacity: 0.9;
+}
+
+.chat-input-bar button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .app-footer {
@@ -332,7 +530,7 @@ body {
   justify-content: center;
   flex-wrap: wrap;
   gap: 6px;
-  margin-top: 17px;
+  margin-top: 14px;
   color: #71819b;
   font-size: 9px;
 }
@@ -346,7 +544,6 @@ body {
 }
 
 /* Semantic states applied by popup.js */
-
 .state-normal .hero-symbol {
   color: var(--green);
   background: var(--green-soft);
