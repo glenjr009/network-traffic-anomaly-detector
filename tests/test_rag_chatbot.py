@@ -150,16 +150,17 @@ class TestRAGChatbot(unittest.TestCase):
         retrieval = retriever.retrieve("What is a DDoS attack?")
         self.assertTrue(retrieval["has_evidence"])
 
-        with patch("src.realtime_api.call_llm", return_value=None):
-            # Exercise endpoint path through chat with forced offline LLM
-            with patch("src.rag.call_llm", return_value=None):
-                response = self.client.post(
-                    "/api/chat",
-                    json={"query": "What is a DDoS attack?"},
-                )
+        # call_llm is imported inside the endpoint from src.rag / Backend.rag.generator
+        with patch("Backend.rag.generator.call_llm", return_value=None), patch(
+            "src.rag.call_llm", return_value=None
+        ):
+            response = self.client.post(
+                "/api/chat",
+                json={"query": "What is a DDoS attack?"},
+            )
         self.assertEqual(response.status_code, 200)
         data = response.json()
-        self.assertIn(data["mode"], ("offline_knowledge_base", "llm_auto", "llm_offline_soc"))
+        self.assertEqual(data["mode"], "offline_knowledge_base")
         self.assertGreater(len(data["answer"]), 20)
         offline = build_offline_fallback(prediction=None, retrieval_result=retrieval)
         self.assertGreater(len(offline), 20)
